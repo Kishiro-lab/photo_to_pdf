@@ -1,10 +1,11 @@
 # main.py
 import tkinter as tk
+from tkinterdnd2 import TkinterDnD
 from app_ui import PhotoToPdfApp
 
 
 def main():
-    root = tk.Tk()
+    root = TkinterDnD.Tk()
     app = PhotoToPdfApp(root)
     root.mainloop()
 

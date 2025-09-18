@@ -4,6 +4,9 @@ from tkinter import ttk, filedialog, messagebox
 from PIL import Image
 import os
 from utils import resource_path
+from tkinterdnd2 import DND_FILES
+import re
+
 
 class PhotoToPdfApp:
     def __init__(self, root: tk.Tk):
@@ -32,6 +35,8 @@ class PhotoToPdfApp:
         # --- 選択された画像リスト ---
         self.listbox = tk.Listbox(main_frame, selectmode=tk.MULTIPLE)
         self.listbox.pack(fill=tk.BOTH, expand=True, pady=5)
+        self.listbox.drop_target_register(DND_FILES)
+        self.listbox.dnd_bind("<<Drop>>", self.drop_images)
 
         # --- ボタンフレーム ---
         button_frame = ttk.Frame(main_frame)
@@ -44,14 +49,28 @@ class PhotoToPdfApp:
         convert_button.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
 
         # --- クリアボタン ---
-        clear_button = ttk.Button(
-            button_frame, text="クリア", command=self.clear_list
-        )
+        clear_button = ttk.Button(button_frame, text="クリア", command=self.clear_list)
         clear_button.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
 
         # --- 終了ボタン ---
         quit_button = ttk.Button(main_frame, text="終了", command=root.quit)
         quit_button.pack(fill=tk.X, pady=5)
+
+    def add_image_path(self, file_path):
+        if file_path not in self.image_paths:
+            # Check if the file is an image
+            if file_path.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".bmp")):
+                self.image_paths.append(file_path)
+                self.listbox.insert(tk.END, os.path.basename(file_path))
+
+    def drop_images(self, event):
+        # The event.data is a string of file paths, possibly with curly braces
+        # We can use a regular expression to find all file paths
+        files = re.findall(r"\{.*?\}|\S+", event.data)
+        for file in files:
+            # Remove curly braces if they exist
+            file_path = file.strip("{}")
+            self.add_image_path(file_path)
 
     def select_images(self):
         files = filedialog.askopenfilenames(
@@ -63,9 +82,7 @@ class PhotoToPdfApp:
         )
         if files:
             for file in files:
-                if file not in self.image_paths:
-                    self.image_paths.append(file)
-                    self.listbox.insert(tk.END, os.path.basename(file))
+                self.add_image_path(file)
 
     def clear_list(self):
         self.listbox.delete(0, tk.END)
@@ -89,7 +106,7 @@ class PhotoToPdfApp:
             images = []
             # 最初の画像をRGBで開く
             img1 = Image.open(self.image_paths[0]).convert("RGB")
-            
+
             # 残りの画像を処理
             for path in self.image_paths[1:]:
                 img = Image.open(path).convert("RGB")
