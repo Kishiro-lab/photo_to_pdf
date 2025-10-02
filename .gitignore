@@ -4,3 +4,7 @@ docs/
 memo.txt
 __pycache__/
 *.pyc
+
+# 仮想環境を無視
+.venv/
+venv/
